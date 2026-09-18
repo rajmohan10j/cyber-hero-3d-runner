@@ -13,136 +13,70 @@ let runTime = 0;
 let isShooting = false;
 let shootTimer = 0;
 
-// Texture Loader
+// Texture Loader for High-Res Hero Artwork
 const textureLoader = new THREE.TextureLoader();
-const heroTex = textureLoader.load('/assets/hero.jpg');
+const heroTexture = typeof document !== 'undefined' ? textureLoader.load('/assets/hero.jpg') : new THREE.Texture();
 
 export function createHero() {
   const heroGroup = new THREE.Group();
 
-  // Materials
-  const armorMat = new THREE.MeshLambertMaterial({ 
-    color: 0x0284c7,
-    emissive: 0x0369a1,
-    emissiveIntensity: 0.2
+  // 1. Hero 2.5D HD Character Cutout Card
+  const heroGeo = new THREE.PlaneGeometry(1.7, 1.9);
+  const heroMat = new THREE.MeshBasicMaterial({ 
+    map: heroTexture,
+    side: THREE.DoubleSide
   });
-  const chestPlateMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
-  const visorMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-  const coreMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-  const jetpackMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
-  const flameMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
-  const blasterMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
-  const muzzleFlashMat = new THREE.MeshBasicMaterial({ 
-    color: 0x38bdf8,
+  const heroSprite = new THREE.Mesh(heroGeo, heroMat);
+  heroSprite.position.y = 1.0;
+  heroGroup.add(heroSprite);
+
+  // 2. Glowing Cyan Border Frame
+  const frameGeo = new THREE.BoxGeometry(1.76, 1.96, 0.08);
+  const frameMat = new THREE.MeshLambertMaterial({ 
+    color: 0x0284c7,
+    emissive: 0x38bdf8,
+    emissiveIntensity: 0.4
+  });
+  const frame = new THREE.Mesh(frameGeo, frameMat);
+  frame.position.set(0, 1.0, -0.05);
+  heroGroup.add(frame);
+
+  // 3. Glowing Neon Thruster Ground Shadow Ring
+  const ringGeo = new THREE.RingGeometry(0.35, 0.75, 24);
+  const ringMat = new THREE.MeshBasicMaterial({ 
+    color: 0x00f0ff,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.6
+  });
+  const shadowRing = new THREE.Mesh(ringGeo, ringMat);
+  shadowRing.rotation.x = -Math.PI / 2;
+  shadowRing.position.y = 0.02;
+  heroGroup.add(shadowRing);
+
+  // 4. Dual Plasma Muzzle Flashes
+  const flashMat = new THREE.MeshBasicMaterial({ 
+    color: 0x00f0ff,
     transparent: true,
     opacity: 0
   });
-
-  // Hero Textured Badge Material
-  const badgeMat = new THREE.MeshBasicMaterial({ 
-    map: heroTex,
-    transparent: true
-  });
-
-  // 1. Torso
-  const torsoGeo = new THREE.BoxGeometry(0.85, 0.9, 0.65);
-  const torso = new THREE.Mesh(torsoGeo, armorMat);
-  torso.position.y = 0.75;
-  heroGroup.add(torso);
-
-  // Chest Plate with Circular Hero Badge
-  const chestGeo = new THREE.BoxGeometry(0.65, 0.5, 0.1);
-  const chest = new THREE.Mesh(chestGeo, chestPlateMat);
-  chest.position.set(0, 0.8, -0.32);
-  heroGroup.add(chest);
-
-  // 3D Textured Hero Insignia Badge
-  const badgeGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.05, 16);
-  badgeGeo.rotateX(Math.PI / 2);
-  const heroBadge = new THREE.Mesh(badgeGeo, badgeMat);
-  heroBadge.position.set(0, 0.8, -0.38);
-  heroGroup.add(heroBadge);
-
-  // 2. Head & Visor
-  const headGeo = new THREE.BoxGeometry(0.6, 0.55, 0.55);
-  const head = new THREE.Mesh(headGeo, armorMat);
-  head.position.set(0, 1.4, 0);
-  heroGroup.add(head);
-
-  // Hero Glowing Anime Visor
-  const visorGeo = new THREE.BoxGeometry(0.52, 0.2, 0.08);
-  const visor = new THREE.Mesh(visorGeo, visorMat);
-  visor.position.set(0, 1.4, -0.28);
-  heroGroup.add(visor);
-
-  // Antenna Fin
-  const finGeo = new THREE.ConeGeometry(0.08, 0.3, 4);
-  const fin = new THREE.Mesh(finGeo, chestPlateMat);
-  fin.position.set(0, 1.75, 0);
-  heroGroup.add(fin);
-
-  // 3. Dual Arm Blasters
-  const blasterGeo = new THREE.BoxGeometry(0.2, 0.25, 0.85);
-  
-  const leftArm = new THREE.Mesh(blasterGeo, blasterMat);
-  leftArm.position.set(-0.55, 0.7, -0.15);
-  heroGroup.add(leftArm);
-
-  const rightArm = new THREE.Mesh(blasterGeo, blasterMat);
-  rightArm.position.set(0.55, 0.7, -0.15);
-  heroGroup.add(rightArm);
-
-  // Muzzle Flashes
-  const flashGeo = new THREE.ConeGeometry(0.18, 0.4, 6);
+  const flashGeo = new THREE.ConeGeometry(0.2, 0.45, 6);
   flashGeo.rotateX(-Math.PI / 2);
 
-  const leftFlash = new THREE.Mesh(flashGeo, muzzleFlashMat);
-  leftFlash.position.set(-0.55, 0.7, -0.7);
+  const leftFlash = new THREE.Mesh(flashGeo, flashMat);
+  leftFlash.position.set(-0.75, 0.8, -0.4);
   heroGroup.add(leftFlash);
 
-  const rightFlash = new THREE.Mesh(flashGeo, muzzleFlashMat);
-  rightFlash.position.set(0.55, 0.7, -0.7);
+  const rightFlash = new THREE.Mesh(flashGeo, flashMat);
+  rightFlash.position.set(0.75, 0.8, -0.4);
   heroGroup.add(rightFlash);
 
-  // 4. Jetpack & Plasma Flames
-  const jetpackGeo = new THREE.BoxGeometry(0.55, 0.65, 0.25);
-  const jetpack = new THREE.Mesh(jetpackGeo, jetpackMat);
-  jetpack.position.set(0, 0.8, 0.4);
-  heroGroup.add(jetpack);
-
-  const flameGeo = new THREE.ConeGeometry(0.12, 0.45, 6);
-  flameGeo.rotateX(Math.PI);
-
-  const leftFlame = new THREE.Mesh(flameGeo, flameMat);
-  leftFlame.position.set(-0.16, 0.35, 0.4);
-  heroGroup.add(leftFlame);
-
-  const rightFlame = new THREE.Mesh(flameGeo, flameMat);
-  rightFlame.position.set(0.16, 0.35, 0.4);
-  heroGroup.add(rightFlame);
-
-  // 5. Animated Legs
-  const legGeo = new THREE.BoxGeometry(0.26, 0.45, 0.28);
-
-  const leftLeg = new THREE.Mesh(legGeo, armorMat);
-  leftLeg.position.set(-0.25, 0.25, 0);
-  heroGroup.add(leftLeg);
-
-  const rightLeg = new THREE.Mesh(legGeo, armorMat);
-  rightLeg.position.set(0.25, 0.25, 0);
-  heroGroup.add(rightLeg);
-
   heroGroup.userData = {
-    leftLeg,
-    rightLeg,
-    leftFlame,
-    rightFlame,
+    heroSprite,
+    frame,
+    shadowRing,
     leftFlash,
-    rightFlash,
-    torso,
-    head,
-    leftArm,
-    rightArm
+    rightFlash
   };
 
   heroGroup.position.set(0, 0, 0);
@@ -169,8 +103,8 @@ export function triggerMuzzleFlash(hero) {
   if (hero && hero.userData) {
     const { leftFlash, rightFlash } = hero.userData;
     if (leftFlash && rightFlash) {
-      leftFlash.material.opacity = 0.9;
-      rightFlash.material.opacity = 0.9;
+      leftFlash.material.opacity = 0.95;
+      rightFlash.material.opacity = 0.95;
     }
   }
 }
@@ -178,7 +112,7 @@ export function triggerMuzzleFlash(hero) {
 export function updatePlayer(hero, delta, isMoving = true) {
   if (!hero) return;
 
-  runTime += delta * 15;
+  runTime += delta * 14;
 
   // 1. Vertical Jump Physics
   if (isJumping) {
@@ -189,9 +123,20 @@ export function updatePlayer(hero, delta, isMoving = true) {
       hero.position.y = 0;
       velocityY = 0;
       isJumping = false;
-      hero.rotation.x = 0;
+      hero.scale.set(1, 1, 1);
     } else {
-      hero.rotation.x += 10 * delta;
+      // Jump stretch animation
+      hero.scale.set(0.9, 1.15, 1);
+    }
+  } else if (isMoving) {
+    // Running stride hover bobbing
+    const bob = Math.sin(runTime) * 0.08;
+    const { heroSprite, frame, shadowRing } = hero.userData || {};
+    if (heroSprite) heroSprite.position.y = 1.0 + bob;
+    if (frame) frame.position.y = 1.0 + bob;
+    if (shadowRing) {
+      const ringScale = 1.0 + Math.sin(runTime * 2) * 0.15;
+      shadowRing.scale.set(ringScale, ringScale, 1);
     }
   }
 
@@ -201,37 +146,15 @@ export function updatePlayer(hero, delta, isMoving = true) {
   hero.position.x += diffX * 14 * delta;
 
   // Bank roll into turns
-  const targetRoll = -diffX * 0.12;
+  const targetRoll = -diffX * 0.08;
   hero.rotation.z += (targetRoll - hero.rotation.z) * 12 * delta;
 
-  // 3. Limb Running Animations
-  const { leftLeg, rightLeg, leftFlame, rightFlame, leftFlash, rightFlash, torso, leftArm, rightArm } = hero.userData || {};
-
-  if (!isJumping && isMoving) {
-    const stride = Math.sin(runTime) * 0.45;
-    if (leftLeg) leftLeg.position.z = stride;
-    if (rightLeg) rightLeg.position.z = -stride;
-
-    if (torso) torso.position.y = 0.75 + Math.abs(Math.sin(runTime * 2)) * 0.08;
-
-    if (leftArm) leftArm.rotation.x = Math.sin(runTime) * 0.1;
-    if (rightArm) rightArm.rotation.x = -Math.sin(runTime) * 0.1;
-
-    const flameScale = 0.8 + Math.random() * 0.4;
-    if (leftFlame) leftFlame.scale.set(1, flameScale, 1);
-    if (rightFlame) rightFlame.scale.set(1, flameScale, 1);
-  } else if (isJumping) {
-    if (leftLeg) leftLeg.position.z = 0.1;
-    if (rightLeg) rightLeg.position.z = 0.1;
-    if (leftFlame) leftFlame.scale.set(1.4, 1.8, 1.4);
-    if (rightFlame) rightFlame.scale.set(1.4, 1.8, 1.4);
-  }
-
-  // 4. Muzzle Flash Fade Out
+  // 3. Muzzle Flash Fade Out
   if (isShooting) {
     shootTimer -= delta;
     if (shootTimer <= 0) {
       isShooting = false;
+      const { leftFlash, rightFlash } = hero.userData || {};
       if (leftFlash) leftFlash.material.opacity = 0;
       if (rightFlash) rightFlash.material.opacity = 0;
     }
@@ -251,5 +174,7 @@ export function resetPlayer(hero) {
   if (hero) {
     hero.position.set(0, 0, 0);
     hero.rotation.set(0, 0, 0);
+    hero.scale.set(1, 1, 1);
   }
 }
+
