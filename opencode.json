@@ -1,0 +1,22 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "provider": {
+        "inception": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "Inception",
+            "options": {
+                "baseURL": "https://api.inceptionlabs.ai/v1"
+            },
+            "models": {
+                "mercury-2.5": {
+                    "name": "Mercury 2.5",
+                    "limit": {
+                        "context": 260000,
+                        "output": 65536
+                    }
+                }
+            }
+        }
+    },
+    "model": "inception/mercury-2.5"
+}
