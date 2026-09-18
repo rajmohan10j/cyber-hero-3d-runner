@@ -5,6 +5,10 @@ const obstacles = [];
 const particles = [];
 const collectibles = [];
 
+// Texture Loader for 3D Villain Holograms
+const textureLoader = new THREE.TextureLoader();
+const villainTex = textureLoader.load('/assets/villain.jpg');
+
 // Shared Materials
 const villainArmorMat = new THREE.MeshLambertMaterial({ color: 0xdc2626 }); // Crimson Red
 const villainDarkMat = new THREE.MeshLambertMaterial({ color: 0x450a0a }); // Dark Crimson
@@ -12,11 +16,16 @@ const villainEyeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 }); // Glowi
 const villainPurpleMat = new THREE.MeshBasicMaterial({ color: 0xa855f7 }); // Evil Purple Glow
 const goldMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 }); // Golden Collectibles
 
+const villainBadgeMat = new THREE.MeshBasicMaterial({ 
+  map: villainTex,
+  transparent: true
+});
+
 // -------------------------------------------------------------
 // Villain Monster Creators
 // -------------------------------------------------------------
 
-// 1. Mecha-Goblin Stomper (Angry horned red mech)
+// 1. Mecha-Goblin Stomper (Angry horned red mech with Villain Crest)
 function createMechaGoblin() {
   const group = new THREE.Group();
   group.userData.type = 'GOBLIN';
@@ -26,6 +35,13 @@ function createMechaGoblin() {
   const body = new THREE.Mesh(bodyGeo, villainArmorMat);
   body.position.y = 1.0;
   group.add(body);
+
+  // 3D Holographic Villain Face Emblem
+  const emblemGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.05, 16);
+  emblemGeo.rotateX(Math.PI / 2);
+  const emblem = new THREE.Mesh(emblemGeo, villainBadgeMat);
+  emblem.position.set(0, 0.9, 0.48);
+  group.add(emblem);
 
   // Evil Horns
   const hornGeo = new THREE.ConeGeometry(0.18, 0.5, 4);
@@ -42,12 +58,12 @@ function createMechaGoblin() {
   // Glowing Villain Eyes (Slanted angry eyes)
   const eyeGeo = new THREE.BoxGeometry(0.3, 0.12, 0.1);
   const leftEye = new THREE.Mesh(eyeGeo, villainEyeMat);
-  leftEye.position.set(-0.28, 1.2, 0.46);
+  leftEye.position.set(-0.28, 1.3, 0.46);
   leftEye.rotation.z = -0.2;
   group.add(leftEye);
 
   const rightEye = new THREE.Mesh(eyeGeo, villainEyeMat);
-  rightEye.position.set(0.28, 1.2, 0.46);
+  rightEye.position.set(0.28, 1.3, 0.46);
   rightEye.rotation.z = 0.2;
   group.add(rightEye);
 
@@ -79,7 +95,7 @@ function createMechaGoblin() {
   return group;
 }
 
-// 2. Cyber-Drone Fiend (Floating menacing drone)
+// 2. Cyber-Drone Fiend (Floating menacing drone with Holographic villain projection)
 function createCyberDrone() {
   const group = new THREE.Group();
   group.userData.type = 'DRONE';
@@ -90,11 +106,11 @@ function createCyberDrone() {
   core.position.y = 1.6;
   group.add(core);
 
-  // Visor Eye Band
-  const eyeBandGeo = new THREE.BoxGeometry(1.0, 0.2, 0.5);
-  const eyeBand = new THREE.Mesh(eyeBandGeo, villainPurpleMat);
-  eyeBand.position.set(0, 1.6, 0.2);
-  group.add(eyeBand);
+  // Floating Holographic Villain Display Badge
+  const holoGeo = new THREE.PlaneGeometry(0.6, 0.6);
+  const holo = new THREE.Mesh(holoGeo, villainBadgeMat);
+  holo.position.set(0, 1.6, 0.45);
+  group.add(holo);
 
   // Hover Wings
   const wingGeo = new THREE.BoxGeometry(1.6, 0.12, 0.6);
@@ -116,7 +132,7 @@ function createCyberDrone() {
   return group;
 }
 
-// 3. Spiked Armored Barrier (Low jumpable hazard)
+// 3. Spiked Armored Barrier (Hazard block)
 function createSpikeBarrier() {
   const group = new THREE.Group();
   group.userData.type = 'SPIKE_BARRIER';
@@ -135,7 +151,7 @@ function createSpikeBarrier() {
     group.add(spike);
   }
 
-  // Glowing Warning Strip
+  // Warning Strip
   const stripGeo = new THREE.BoxGeometry(1.6, 0.1, 0.1);
   const strip = new THREE.Mesh(stripGeo, villainEyeMat);
   strip.position.set(0, 0.35, 0.41);
@@ -159,7 +175,6 @@ export function spawnCollectible(scene, spawnZ = -60) {
   const crystal = new THREE.Mesh(geo, goldMat);
   group.add(crystal);
 
-  // Outer Ring
   const ringGeo = new THREE.TorusGeometry(0.48, 0.04, 6, 16);
   const ring = new THREE.Mesh(ringGeo, goldMat);
   group.add(ring);
@@ -180,7 +195,6 @@ export function spawnObstacle(scene, spawnZ = -60) {
   const laneIndex = Math.floor(Math.random() * 3);
   const posX = LANE_POSITIONS[laneIndex];
 
-  // Randomize Villain Type
   const rand = Math.random();
   let villain;
   if (rand < 0.45) {
@@ -195,7 +209,6 @@ export function spawnObstacle(scene, spawnZ = -60) {
   scene.add(villain);
   obstacles.push(villain);
 
-  // Chance to spawn a collectible in a different lane
   if (Math.random() < 0.5) {
     spawnCollectible(scene, spawnZ - 10);
   }
@@ -217,7 +230,6 @@ export function createExplosion(scene, position, color = 0xff3b30) {
     const p = new THREE.Mesh(pGeo, pMat);
     p.position.copy(position);
 
-    // Random explosive velocity vectors
     p.userData = {
       vx: (Math.random() - 0.5) * 12,
       vy: Math.random() * 8 + 3,
@@ -234,12 +246,10 @@ export function createExplosion(scene, position, color = 0xff3b30) {
 // Update Loop
 // -------------------------------------------------------------
 export function updateObstacles(scene, speed, delta, time = 0) {
-  // 1. Update Villains
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const obs = obstacles[i];
     obs.position.z += speed * delta;
 
-    // Villain Animations
     if (obs.userData.type === 'GOBLIN') {
       const stomp = Math.sin(time * 12 + obs.position.z) * 0.3;
       if (obs.userData.leftArm) obs.userData.leftArm.rotation.x = stomp;
@@ -250,14 +260,12 @@ export function updateObstacles(scene, speed, delta, time = 0) {
       if (obs.userData.wings) obs.userData.wings.rotation.y += 8 * delta;
     }
 
-    // Clean up when behind camera
     if (obs.position.z > 8) {
       if (scene) scene.remove(obs);
       obstacles.splice(i, 1);
     }
   }
 
-  // 2. Update Collectibles
   for (let i = collectibles.length - 1; i >= 0; i--) {
     const col = collectibles[i];
     col.position.z += speed * delta;
@@ -270,7 +278,6 @@ export function updateObstacles(scene, speed, delta, time = 0) {
     }
   }
 
-  // 3. Update Particles
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.userData.life -= delta;
@@ -279,7 +286,7 @@ export function updateObstacles(scene, speed, delta, time = 0) {
       if (scene) scene.remove(p);
       particles.splice(i, 1);
     } else {
-      p.userData.vy -= 22 * delta; // Gravity
+      p.userData.vy -= 22 * delta;
       p.position.x += p.userData.vx * delta;
       p.position.y += p.userData.vy * delta;
       p.position.z += p.userData.vz * delta;
