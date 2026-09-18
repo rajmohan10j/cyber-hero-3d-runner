@@ -1,0 +1,39 @@
+Here's a summary of all files created during this session:
+
+## Project Files
+
+### Root Directory
+| File | Purpose |
+|------|---------|
+| `index.html` | Main HTML entry point with UI structure |
+| `style.css` | Complete styling for all UI elements |
+| `vite.config.js` | Vite build configuration |
+| `package.json` | Dependencies (Three.js ^0.160.0, Vite ^5.0.0) |
+| `package-lock.json` | Locked dependency versions |
+| `opencode.json` | Opencode configuration |
+
+### Source Files (`src/`)
+| File | Purpose |
+|------|---------|
+| `main.js` | Entry point, animation loop |
+| `scene.js` | Three.js scene setup, player, ground |
+
+### Documentation (`docs/superpowers/`)
+| File | Purpose |
+|------|---------|
+| `specs/2026-09-18-3d-runner-design.md` | Design specification |
+| `plans/2026-09-18-3d-runner.md` | Implementation plan |
+
+---
+
+## Base Path
+All files are located at: `C:\Users\Raj\OpenCode\`
+
+## Running the Project
+```powershell
+npm install
+npm run dev
+```
+Then open: http://localhost:5173
+
+If you'd like me to create a single summary file containing all this information, I can write it to `SESSION_SUMMARY.md` in the project root.

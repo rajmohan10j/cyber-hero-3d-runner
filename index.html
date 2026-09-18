@@ -3,52 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>3D Runner</title>
+  <title>Cyber Runner: Hero vs Villains 3D</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&family=Bungee&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="canvas-container"></div>
   
   <div id="ui-layer">
+    <!-- Floating Combat Popup (Anime Style) -->
+    <div id="combat-popup" class="combat-popup"></div>
+
     <!-- Start Screen Overlay -->
     <div id="start-screen" class="modal-card">
-      <div class="logo-badge">⚡ 3D SPEED RUN</div>
-      <h1 class="game-title">CYBER RUNNER</h1>
-      <p class="game-subtitle">Dodge obstacles and sprint through the 3D grid</p>
+      <div class="logo-badge">⚡ HERO VS VILLAINS 3D</div>
+      <h1 class="game-title">CYBER HERO</h1>
+      <p class="game-subtitle">Sprint, Jump, & Blast through waves of Cyber Villains!</p>
       
       <div class="instructions-box">
         <div class="control-row">
-          <span class="key-badge">A</span> <span class="key-badge">D</span> or <span class="key-badge">←</span> <span class="key-badge">→</span>
-          <span class="control-desc">Switch Lanes</span>
+          <span class="key-badge">A</span> <span class="key-badge">D</span> / <span class="key-badge">←</span> <span class="key-badge">→</span>
+          <span class="control-desc">Dodge & Switch Lanes</span>
         </div>
         <div class="control-row">
-          <span class="key-badge">SPACE</span> or <span class="key-badge">W</span> / <span class="key-badge">↑</span>
-          <span class="control-desc">Jump</span>
+          <span class="key-badge">SPACE</span> / <span class="key-badge">W</span>
+          <span class="control-desc">Jump Over Barriers</span>
+        </div>
+        <div class="control-row">
+          <span class="key-badge">F</span> / <span class="key-badge">CLICK</span>
+          <span class="control-desc">Fire Dual Lasers 🔥</span>
         </div>
         <div class="control-row mobile-only">
-          <span class="key-badge">SWIPE</span> / <span class="key-badge">TAP</span>
-          <span class="control-desc">Mobile Controls</span>
+          <span class="key-badge">SWIPE</span> / <span class="key-badge">BUTTONS</span>
+          <span class="control-desc">Mobile Touch Controls</span>
         </div>
       </div>
 
-      <button id="start-btn" class="action-btn">START GAME</button>
+      <button id="start-btn" class="action-btn">LAUNCH MISSION 🚀</button>
     </div>
 
     <!-- Active HUD -->
     <div id="hud" style="display: none;">
       <div class="hud-stat-box">
         <div id="score" class="hud-score">Score: 0</div>
-        <div id="high-score" class="hud-best">Best: 0</div>
+        <div class="hud-sub-row">
+          <span id="kills-count" class="hud-kills">Kills: 0</span>
+          <span id="high-score" class="hud-best">Best: 0</span>
+        </div>
       </div>
+    </div>
+
+    <!-- Mobile Touch In-Game Action Buttons -->
+    <div id="mobile-controls" class="mobile-action-bar" style="display: none;">
+      <button id="btn-mobile-jump" class="mobile-btn jump-btn">
+        <span class="btn-icon">🦘</span>
+        <span class="btn-text">JUMP</span>
+      </button>
+      <button id="btn-mobile-fire" class="mobile-btn fire-btn">
+        <span class="btn-icon">🔥</span>
+        <span class="btn-text">BLAST</span>
+      </button>
     </div>
 
     <!-- Game Over Screen -->
     <div id="game-over" class="modal-card" style="display: none;">
-      <div class="game-over-tag">CRASHED!</div>
-      <h2 class="game-over-title">GAME OVER</h2>
+      <div class="game-over-tag">💥 MISSION FAILED</div>
+      <h2 class="game-over-title">HERO DEFEATED</h2>
       
       <div class="score-summary">
         <div class="score-box">
@@ -56,12 +78,16 @@
           <span id="final-score" class="score-value highlight">0</span>
         </div>
         <div class="score-box">
-          <span class="score-label">BEST RECORD</span>
-          <span id="best-score" class="score-value">0</span>
+          <span class="score-label">VILLAINS BLASTED</span>
+          <span id="final-kills" class="score-value kills-val">0</span>
+        </div>
+        <div class="score-box full-width">
+          <span class="score-label">ALL-TIME BEST RECORD</span>
+          <span id="best-score" class="score-value best-val">0</span>
         </div>
       </div>
 
-      <button id="restart-btn" class="action-btn">PLAY AGAIN</button>
+      <button id="restart-btn" class="action-btn">REPLAY MISSION 🔄</button>
     </div>
   </div>
 

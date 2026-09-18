@@ -1,12 +1,14 @@
-import { initScene, createPlayer, createGround } from './scene.js';
-import { updatePlayer, resetPlayer, jump, setLane } from './player.js';
-import { spawnObstacle, updateObstacles, resetObstacles, getObstacles } from './obstacles.js';
-import { checkCollision } from './collision.js';
+import { initScene, createGround } from './scene.js';
+import { createHero, updatePlayer, resetPlayer, jump, setLane, triggerMuzzleFlash } from './player.js';
+import { spawnObstacle, updateObstacles, resetObstacles, getObstacles, getCollectibles, createExplosion } from './obstacles.js';
+import { fireLaser, updateLasers, resetLasers } from './weapons.js';
+import { checkCollision, checkCollectiblePickup } from './collision.js';
 import { getHighScore, saveHighScore } from './storage.js';
+import { audio } from './audio.js';
 
 // Setup Scene & Core Objects
 const { scene, camera, renderer } = initScene();
-const player = createPlayer();
+const player = createHero();
 scene.add(player);
 
 const ground = createGround();
@@ -16,32 +18,60 @@ scene.add(ground);
 const startScreen = document.getElementById('start-screen');
 const hud = document.getElementById('hud');
 const scoreEl = document.getElementById('score');
+const killsEl = document.getElementById('kills-count');
 const highScoreEl = document.getElementById('high-score');
 const gameOverScreen = document.getElementById('game-over');
 const finalScoreEl = document.getElementById('final-score');
+const finalKillsEl = document.getElementById('final-kills');
 const bestScoreEl = document.getElementById('best-score');
 const restartBtn = document.getElementById('restart-btn');
+const combatPopup = document.getElementById('combat-popup');
+
+// Mobile In-Game Action Buttons
+const mobileControls = document.getElementById('mobile-controls');
+const btnMobileJump = document.getElementById('btn-mobile-jump');
+const btnMobileFire = document.getElementById('btn-mobile-fire');
 
 // Game State
 let gameState = 'START'; // 'START' | 'PLAYING' | 'GAMEOVER'
 let score = 0;
+let kills = 0;
 let distanceTraveled = 0;
-let baseSpeed = 20;
+let baseSpeed = 22;
 let currentSpeed = baseSpeed;
-let nextSpawnDistance = 15;
+let nextSpawnDistance = 14;
 let distanceSinceLastSpawn = 0;
 let lastTime = performance.now();
+let cameraShake = 0;
 
 // Initialize High Score Display
 const initialBest = getHighScore();
 if (highScoreEl) highScoreEl.textContent = `Best: ${initialBest}`;
 
 // -------------------------------------------------------------
+// Combat Popup Notice (Anime Style "BOOM! +50")
+// -------------------------------------------------------------
+function showPopup(text, color = '#38bdf8') {
+  if (!combatPopup) return;
+  combatPopup.textContent = text;
+  combatPopup.style.color = color;
+  combatPopup.style.opacity = '1';
+  combatPopup.style.transform = 'translate(-50%, -50%) scale(1.2)';
+
+  setTimeout(() => {
+    combatPopup.style.opacity = '0';
+    combatPopup.style.transform = 'translate(-50%, -80%) scale(0.9)';
+  }, 450);
+}
+
+// -------------------------------------------------------------
 // Game Lifecycle Functions
 // -------------------------------------------------------------
 function startGame() {
+  audio.init();
   gameState = 'PLAYING';
   score = 0;
+  kills = 0;
   distanceTraveled = 0;
   distanceSinceLastSpawn = 0;
   currentSpeed = baseSpeed;
@@ -49,12 +79,15 @@ function startGame() {
 
   resetPlayer(player);
   resetObstacles(scene);
+  resetLasers(scene);
 
   // Update UI
   if (startScreen) startScreen.style.display = 'none';
   if (gameOverScreen) gameOverScreen.style.display = 'none';
   if (hud) hud.style.display = 'block';
+  if (mobileControls) mobileControls.style.display = 'flex';
   if (scoreEl) scoreEl.textContent = 'Score: 0';
+  if (killsEl) killsEl.textContent = 'Kills: 0';
   if (highScoreEl) highScoreEl.textContent = `Best: ${getHighScore()}`;
 
   // Initial obstacle
@@ -63,17 +96,36 @@ function startGame() {
 
 function handleGameOver() {
   gameState = 'GAMEOVER';
+  audio.playGameOver();
+
+  // Trigger defeat explosion on hero
+  createExplosion(scene, player.position, 0x38bdf8);
 
   const best = saveHighScore(score);
 
   if (hud) hud.style.display = 'none';
+  if (mobileControls) mobileControls.style.display = 'none';
   if (gameOverScreen) gameOverScreen.style.display = 'block';
   if (finalScoreEl) finalScoreEl.textContent = score;
+  if (finalKillsEl) finalKillsEl.textContent = kills;
   if (bestScoreEl) bestScoreEl.textContent = best;
 }
 
+function handleShoot() {
+  if (gameState !== 'PLAYING') return;
+  triggerMuzzleFlash(player);
+  fireLaser(scene, player);
+  audio.playLaser();
+}
+
+function handleJump() {
+  if (gameState !== 'PLAYING') return;
+  jump();
+  audio.playJump();
+}
+
 // -------------------------------------------------------------
-// Input Handlers (Keyboard & Mobile Touch/Gestures)
+// Input Handlers (Keyboard, Mouse & Mobile Touch)
 // -------------------------------------------------------------
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
@@ -81,20 +133,27 @@ window.addEventListener('keydown', (e) => {
     if (gameState === 'START') {
       startGame();
     } else if (gameState === 'PLAYING') {
-      jump();
+      handleJump();
     } else if (gameState === 'GAMEOVER') {
       startGame();
     }
+  } else if (e.code === 'KeyF' || e.code === 'KeyJ' || e.code === 'KeyE') {
+    e.preventDefault();
+    handleShoot();
   } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
     e.preventDefault();
-    if (gameState === 'PLAYING') {
-      setLane(-1);
-    }
+    if (gameState === 'PLAYING') setLane(-1);
   } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
     e.preventDefault();
-    if (gameState === 'PLAYING') {
-      setLane(1);
-    }
+    if (gameState === 'PLAYING') setLane(1);
+  }
+});
+
+// Click / Left-Click on screen to shoot during gameplay
+window.addEventListener('mousedown', (e) => {
+  if (e.target.closest('#mobile-controls') || e.target.closest('.modal-card')) return;
+  if (gameState === 'PLAYING') {
+    handleShoot();
   }
 });
 
@@ -112,6 +171,8 @@ window.addEventListener('touchstart', (e) => {
 }, { passive: true });
 
 window.addEventListener('touchend', (e) => {
+  // Ignore touches on UI buttons
+  if (e.target.closest('#mobile-controls') || e.target.closest('.modal-card')) return;
   if (e.changedTouches.length === 0) return;
 
   const touchEndX = e.changedTouches[0].clientX;
@@ -125,7 +186,6 @@ window.addEventListener('touchend', (e) => {
     return;
   }
   if (gameState === 'GAMEOVER') {
-    // Only restart if not clicking restart button directly
     if (!e.target.closest('#restart-btn')) {
       startGame();
     }
@@ -134,16 +194,33 @@ window.addEventListener('touchend', (e) => {
 
   // Swipe or Tap detection
   if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-    // Horizontal swipe
+    // Horizontal swipe for lane switch
     setLane(deltaX > 0 ? 1 : -1);
-  } else if (deltaY < -30) {
+  } else if (deltaY < -35) {
     // Swipe Up to Jump
-    jump();
-  } else if (Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20 && deltaTime < 300) {
-    // Quick Tap to Jump
-    jump();
+    handleJump();
+  } else if (Math.abs(deltaX) < 20 && Math.abs(deltaY) < 20 && deltaTime < 250) {
+    // Tap to Shoot
+    handleShoot();
   }
 }, { passive: true });
+
+// Mobile On-Screen Action Buttons
+if (btnMobileJump) {
+  btnMobileJump.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleJump();
+  });
+}
+
+if (btnMobileFire) {
+  btnMobileFire.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleShoot();
+  });
+}
 
 // UI Button Listeners
 if (startScreen) {
@@ -166,45 +243,75 @@ function animate() {
   requestAnimationFrame(animate);
 
   const now = performance.now();
-  const delta = Math.min((now - lastTime) / 1000, 0.1); // clamp to avoid physics jumps
+  const delta = Math.min((now - lastTime) / 1000, 0.1);
   lastTime = now;
+  const time = now * 0.001;
 
   if (gameState === 'PLAYING') {
-    // Update player
-    updatePlayer(player, delta);
+    // 1. Update Player
+    updatePlayer(player, delta, true);
 
-    // Increase speed gradually over time
-    currentSpeed = Math.min(baseSpeed + (distanceTraveled / 120), 45);
+    // 2. Increase speed gradually
+    currentSpeed = Math.min(baseSpeed + (distanceTraveled / 100), 48);
 
-    // Advance world distance
+    // 3. Advance world distance
     const frameDistance = currentSpeed * delta;
     distanceTraveled += frameDistance;
     distanceSinceLastSpawn += frameDistance;
 
-    // Obstacle spawning
+    // 4. Obstacle & Villain spawning
     if (distanceSinceLastSpawn >= nextSpawnDistance) {
-      spawnObstacle(scene, -60);
+      spawnObstacle(scene, -65);
       distanceSinceLastSpawn = 0;
-      // Randomize distance for next obstacle (shorter distance as speed increases)
-      nextSpawnDistance = Math.max(12, 22 - (currentSpeed * 0.2) + (Math.random() * 8));
+      nextSpawnDistance = Math.max(12, 22 - (currentSpeed * 0.18) + (Math.random() * 7));
     }
 
-    // Update obstacles
-    updateObstacles(scene, currentSpeed, delta);
+    // 5. Update Obstacles & Particles
+    updateObstacles(scene, currentSpeed, delta, time);
 
-    // Check for collisions
+    // 6. Update Lasers & Weapon Hits on Villains
+    updateLasers(scene, delta, getObstacles(), (hitVillain, pos) => {
+      kills++;
+      score += 50; // +50 points per villain kill
+      cameraShake = 0.25;
+      audio.playExplosion();
+      showPopup('💥 DESTROYED! +50', '#ef4444');
+
+      if (killsEl) killsEl.textContent = `Kills: ${kills}`;
+      if (scoreEl) scoreEl.textContent = `Score: ${score}`;
+    });
+
+    // 7. Check Collectible Pickups
+    checkCollectiblePickup(scene, player, getCollectibles(), () => {
+      score += 20; // +20 points for energy crystal
+      audio.playCoin();
+      showPopup('⭐ ENERGY! +20', '#facc15');
+      if (scoreEl) scoreEl.textContent = `Score: ${score}`;
+    });
+
+    // 8. Check for Player Collision with Villains
     if (checkCollision(player, getObstacles())) {
       handleGameOver();
     }
 
-    // Update score (1 point per 2 meters)
-    score = Math.floor(distanceTraveled / 2);
+    // 9. Update distance score
+    score += Math.floor(frameDistance * 0.5);
     if (scoreEl) scoreEl.textContent = `Score: ${score}`;
+
   } else {
     // Idle gentle hover animation in start / gameover state
     if (player) {
-      player.position.y = 0.5 + Math.sin(now * 0.003) * 0.1;
+      player.position.y = Math.sin(now * 0.003) * 0.12;
+      updatePlayer(player, delta, false);
     }
+  }
+
+  // Camera Shake Effect on explosions
+  if (cameraShake > 0) {
+    camera.position.x += (Math.random() - 0.5) * cameraShake;
+    camera.position.y += (Math.random() - 0.5) * cameraShake;
+    cameraShake -= delta * 1.5;
+    if (cameraShake < 0) cameraShake = 0;
   }
 
   // Render Frame

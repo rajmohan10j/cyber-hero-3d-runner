@@ -1,27 +1,47 @@
 import * as THREE from 'three';
+import { removeCollectible, createExplosion } from './obstacles.js';
 
-const playerBox = new THREE.Box3();
-const obstacleBox = new THREE.Box3();
+const heroBox = new THREE.Box3();
+const itemBox = new THREE.Box3();
 
-export function checkCollision(player, obstacles) {
-  if (!player || !obstacles || obstacles.length === 0) return false;
+export function checkCollision(hero, obstacles) {
+  if (!hero || !obstacles || obstacles.length === 0) return false;
 
-  // Compute player bounding box with small inset for forgiving hitbox
-  playerBox.setFromObject(player);
-  playerBox.expandByScalar(-0.08);
+  heroBox.setFromObject(hero);
+  heroBox.expandByScalar(-0.1); // Forgiving hitbox for smooth fun gameplay
 
   for (let i = 0; i < obstacles.length; i++) {
     const obs = obstacles[i];
-    // Quick Z-distance check to skip distant obstacles
-    if (Math.abs(obs.position.z - player.position.z) > 3) continue;
+    if (Math.abs(obs.position.z - hero.position.z) > 3) continue;
 
-    obstacleBox.setFromObject(obs);
-    obstacleBox.expandByScalar(-0.05);
+    itemBox.setFromObject(obs);
+    itemBox.expandByScalar(-0.1);
 
-    if (playerBox.intersectsBox(obstacleBox)) {
+    if (heroBox.intersectsBox(itemBox)) {
       return true;
     }
   }
 
   return false;
+}
+
+export function checkCollectiblePickup(scene, hero, collectibles, onPickup) {
+  if (!hero || !collectibles || collectibles.length === 0) return;
+
+  heroBox.setFromObject(hero);
+  heroBox.expandByScalar(0.2); // Generous pickup magnet radius
+
+  for (let i = collectibles.length - 1; i >= 0; i--) {
+    const col = collectibles[i];
+    if (Math.abs(col.position.z - hero.position.z) > 3) continue;
+
+    itemBox.setFromObject(col);
+
+    if (heroBox.intersectsBox(itemBox)) {
+      // Picked up!
+      createExplosion(scene, col.position, 0xfbbf24);
+      if (onPickup) onPickup(col);
+      removeCollectible(scene, i);
+    }
+  }
 }
