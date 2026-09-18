@@ -1,29 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>3D Runner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="canvas-container"></div>
+  
   <div id="ui-layer">
-    <div id="start-screen">
-      <h1>3D Runner</h1>
-      <p>Tap or Space to start</p>
+    <!-- Start Screen Overlay -->
+    <div id="start-screen" class="modal-card">
+      <div class="logo-badge">⚡ 3D SPEED RUN</div>
+      <h1 class="game-title">CYBER RUNNER</h1>
+      <p class="game-subtitle">Dodge obstacles and sprint through the 3D grid</p>
+      
+      <div class="instructions-box">
+        <div class="control-row">
+          <span class="key-badge">A</span> <span class="key-badge">D</span> or <span class="key-badge">←</span> <span class="key-badge">→</span>
+          <span class="control-desc">Switch Lanes</span>
+        </div>
+        <div class="control-row">
+          <span class="key-badge">SPACE</span> or <span class="key-badge">W</span> / <span class="key-badge">↑</span>
+          <span class="control-desc">Jump</span>
+        </div>
+        <div class="control-row mobile-only">
+          <span class="key-badge">SWIPE</span> / <span class="key-badge">TAP</span>
+          <span class="control-desc">Mobile Controls</span>
+        </div>
+      </div>
+
+      <button id="start-btn" class="action-btn">START GAME</button>
     </div>
+
+    <!-- Active HUD -->
     <div id="hud" style="display: none;">
-      <div id="score">Score: 0</div>
-      <div id="high-score">Best: 0</div>
+      <div class="hud-stat-box">
+        <div id="score" class="hud-score">Score: 0</div>
+        <div id="high-score" class="hud-best">Best: 0</div>
+      </div>
     </div>
-    <div id="game-over" style="display: none;">
-      <h2>Game Over</h2>
-      <p>Final Score: <span id="final-score">0</span></p>
-      <p>Best: <span id="best-score">0</span></p>
-      <button id="restart-btn">Play Again</button>
+
+    <!-- Game Over Screen -->
+    <div id="game-over" class="modal-card" style="display: none;">
+      <div class="game-over-tag">CRASHED!</div>
+      <h2 class="game-over-title">GAME OVER</h2>
+      
+      <div class="score-summary">
+        <div class="score-box">
+          <span class="score-label">FINAL SCORE</span>
+          <span id="final-score" class="score-value highlight">0</span>
+        </div>
+        <div class="score-box">
+          <span class="score-label">BEST RECORD</span>
+          <span id="best-score" class="score-value">0</span>
+        </div>
+      </div>
+
+      <button id="restart-btn" class="action-btn">PLAY AGAIN</button>
     </div>
   </div>
+
   <script type="module" src="src/main.js"></script>
 </body>
 </html>
