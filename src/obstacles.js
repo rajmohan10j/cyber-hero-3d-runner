@@ -5,104 +5,228 @@ const obstacles = [];
 const particles = [];
 const collectibles = [];
 
-// Texture Loader for High-Res Villain Artwork
-const textureLoader = new THREE.TextureLoader();
-const villainTexture = typeof document !== 'undefined' ? textureLoader.load('/assets/villain.jpg') : new THREE.Texture();
-
-// Shared Materials
-const villainMat = new THREE.MeshBasicMaterial({ 
-  map: villainTexture,
-  side: THREE.DoubleSide
+// Shared 3D Materials
+const villainCrimson = new THREE.MeshLambertMaterial({ 
+  color: 0xdc2626, // Crimson Armor
+  emissive: 0x991b1b,
+  emissiveIntensity: 0.15
 });
-
-const villainFrameMat = new THREE.MeshLambertMaterial({ 
-  color: 0x991b1b,
-  emissive: 0xef4444,
-  emissiveIntensity: 0.5
+const villainDarkSteel = new THREE.MeshLambertMaterial({ 
+  color: 0x450a0a // Dark Armored Steel
 });
-
-const redRingMat = new THREE.MeshBasicMaterial({ 
-  color: 0xef4444,
-  side: THREE.DoubleSide,
-  transparent: true,
-  opacity: 0.6
+const villainEyes = new THREE.MeshBasicMaterial({ 
+  color: 0xfacc15 // Evil Glowing Yellow Eyes
 });
-
-const barrierMat = new THREE.MeshLambertMaterial({ color: 0x7f1d1d });
-const spikeMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-const goldMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+const villainCore = new THREE.MeshBasicMaterial({ 
+  color: 0xef4444 // Glowing Demon Core
+});
+const dronePurple = new THREE.MeshBasicMaterial({ 
+  color: 0xa855f7 // Neon Purple Glow
+});
+const spikeMaterial = new THREE.MeshBasicMaterial({ 
+  color: 0xfacc15 
+});
+const goldMaterial = new THREE.MeshBasicMaterial({ 
+  color: 0xfbbf24 
+});
 
 // -------------------------------------------------------------
-// 1. High-Res Mecha Villain Monster Cutout
+// 1. True 3D Volumetric Mecha-Goblin Villain
 // -------------------------------------------------------------
-function createMechaVillain() {
+function createMechaGoblin() {
   const group = new THREE.Group();
-  group.userData.type = 'VILLAIN';
+  group.userData.type = 'GOBLIN';
 
-  // Character Artwork Cutout Plane
-  const charGeo = new THREE.PlaneGeometry(2.0, 2.3);
-  const charMesh = new THREE.Mesh(charGeo, villainMat);
-  charMesh.position.y = 1.15;
-  group.add(charMesh);
+  // 1. Torso & Demon Armor
+  const bodyGeo = new THREE.BoxGeometry(1.2, 1.3, 0.85);
+  const body = new THREE.Mesh(bodyGeo, villainCrimson);
+  body.position.y = 1.2;
+  group.add(body);
 
-  // Fiery Red Border Frame
-  const frameGeo = new THREE.BoxGeometry(2.08, 2.38, 0.08);
-  const frame = new THREE.Mesh(frameGeo, villainFrameMat);
-  frame.position.set(0, 1.15, -0.05);
-  group.add(frame);
+  // Chest Demon Plate
+  const chestPlate = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.7, 0.2), villainDarkSteel);
+  chestPlate.position.set(0, 1.3, 0.4);
+  group.add(chestPlate);
 
-  // Evil Ground Shadow Aura Ring
-  const ringGeo = new THREE.RingGeometry(0.4, 0.9, 24);
-  const shadowRing = new THREE.Mesh(ringGeo, redRingMat);
-  shadowRing.rotation.x = -Math.PI / 2;
-  shadowRing.position.y = 0.02;
-  group.add(shadowRing);
+  // Glowing Demonic Core
+  const coreMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2, 0), villainCore);
+  coreMesh.position.set(0, 1.3, 0.52);
+  group.add(coreMesh);
 
-  // Evil Spikes on Top Corners
-  const spikeGeo = new THREE.ConeGeometry(0.18, 0.5, 4);
-  const leftSpike = new THREE.Mesh(spikeGeo, spikeMat);
-  leftSpike.position.set(-0.95, 2.45, 0);
-  leftSpike.rotation.z = 0.3;
-  group.add(leftSpike);
+  // 2. Head & Horns
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 2.05, 0);
 
-  const rightSpike = new THREE.Mesh(spikeGeo, spikeMat);
-  rightSpike.position.set(0.95, 2.45, 0);
-  rightSpike.rotation.z = -0.3;
-  group.add(rightSpike);
+  const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.65, 0.75), villainCrimson);
+  headGroup.add(headMesh);
 
-  group.userData.charMesh = charMesh;
-  group.userData.frame = frame;
-  group.userData.shadowRing = shadowRing;
+  // Evil Horns
+  const hornGeo = new THREE.ConeGeometry(0.18, 0.6, 4);
+  const leftHorn = new THREE.Mesh(hornGeo, villainDarkSteel);
+  leftHorn.position.set(-0.45, 0.55, 0);
+  leftHorn.rotation.z = 0.35;
+  headGroup.add(leftHorn);
+
+  const rightHorn = new THREE.Mesh(hornGeo, villainDarkSteel);
+  rightHorn.position.set(0.45, 0.55, 0);
+  rightHorn.rotation.z = -0.35;
+  headGroup.add(rightHorn);
+
+  // Glowing Eyes
+  const eyeGeo = new THREE.BoxGeometry(0.26, 0.12, 0.1);
+  const leftEye = new THREE.Mesh(eyeGeo, villainEyes);
+  leftEye.position.set(-0.25, 0.08, 0.38);
+  leftEye.rotation.z = -0.25;
+  headGroup.add(leftEye);
+
+  const rightEye = new THREE.Mesh(eyeGeo, villainEyes);
+  rightEye.position.set(0.25, 0.08, 0.38);
+  rightEye.rotation.z = 0.25;
+  headGroup.add(rightEye);
+
+  group.add(headGroup);
+
+  // 3. Spiked Shoulders & Articulated Claw Arms
+  const shoulderGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
+  const spikeGeo = new THREE.ConeGeometry(0.16, 0.45, 4);
+  spikeGeo.rotateX(Math.PI / 2);
+
+  // Left Arm Group
+  const armGroupL = new THREE.Group();
+  armGroupL.position.set(-0.85, 1.6, 0);
+
+  const shoulderL = new THREE.Mesh(shoulderGeo, villainDarkSteel);
+  armGroupL.add(shoulderL);
+
+  const spikeL = new THREE.Mesh(spikeGeo, villainCrimson);
+  spikeL.position.set(-0.2, 0.1, 0.2);
+  armGroupL.add(spikeL);
+
+  const armL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.85, 0.35), villainCrimson);
+  armL.position.y = -0.45;
+  armGroupL.add(armL);
+
+  const clawL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.4), villainDarkSteel);
+  clawL.position.set(0, -0.9, 0.1);
+  armGroupL.add(clawL);
+
+  group.add(armGroupL);
+
+  // Right Arm Group
+  const armGroupR = new THREE.Group();
+  armGroupR.position.set(0.85, 1.6, 0);
+
+  const shoulderR = new THREE.Mesh(shoulderGeo, villainDarkSteel);
+  armGroupR.add(shoulderR);
+
+  const spikeR = new THREE.Mesh(spikeGeo, villainCrimson);
+  spikeR.position.set(0.2, 0.1, 0.2);
+  armGroupR.add(spikeR);
+
+  const armR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.85, 0.35), villainCrimson);
+  armR.position.y = -0.45;
+  armGroupR.add(armR);
+
+  const clawR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.4), villainDarkSteel);
+  clawR.position.set(0, -0.9, 0.1);
+  armGroupR.add(clawR);
+
+  group.add(armGroupR);
+
+  // 4. Stomping 3D Legs
+  const legGroupL = new THREE.Group();
+  legGroupL.position.set(-0.35, 0.55, 0);
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.6, 0.35), villainDarkSteel);
+  legL.position.y = -0.25;
+  legGroupL.add(legL);
+  group.add(legGroupL);
+
+  const legGroupR = new THREE.Group();
+  legGroupR.position.set(0.35, 0.55, 0);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.6, 0.35), villainDarkSteel);
+  legR.position.y = -0.25;
+  legGroupR.add(legR);
+  group.add(legGroupR);
+
+  group.userData = {
+    type: 'GOBLIN',
+    armGroupL,
+    armGroupR,
+    legGroupL,
+    legGroupR,
+    body,
+    headGroup
+  };
 
   return group;
 }
 
 // -------------------------------------------------------------
-// 2. Spiked Low Barrier (Jumpable Hazard)
+// 2. True 3D Cyber-Drone Fiend (Floating Villain Drone)
+// -------------------------------------------------------------
+function createCyberDrone() {
+  const group = new THREE.Group();
+  group.userData.type = 'DRONE';
+
+  // 3D Core Sphere
+  const coreMesh = new THREE.Mesh(new THREE.DodecahedronGeometry(0.65, 0), villainDarkSteel);
+  coreMesh.position.y = 1.6;
+  group.add(coreMesh);
+
+  // Visor Eye Band
+  const eyeBand = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.2, 0.5), dronePurple);
+  eyeBand.position.set(0, 1.6, 0.22);
+  group.add(eyeBand);
+
+  // Hover Wings
+  const wings = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.12, 0.65), villainCrimson);
+  wings.position.set(0, 1.75, 0);
+  group.add(wings);
+
+  // Plasma Thruster
+  const thrusterGeo = new THREE.ConeGeometry(0.22, 0.55, 6);
+  thrusterGeo.rotateX(Math.PI);
+  const thruster = new THREE.Mesh(thrusterGeo, villainEyes);
+  thruster.position.set(0, 0.9, 0);
+  group.add(thruster);
+
+  group.userData = {
+    type: 'DRONE',
+    coreMesh,
+    wings,
+    thruster
+  };
+
+  return group;
+}
+
+// -------------------------------------------------------------
+// 3. Spiked Armored Barrier (Hazard block)
 // -------------------------------------------------------------
 function createSpikeBarrier() {
   const group = new THREE.Group();
   group.userData.type = 'SPIKE_BARRIER';
 
-  // Base Bar
-  const baseGeo = new THREE.BoxGeometry(1.8, 0.7, 0.8);
-  const base = new THREE.Mesh(baseGeo, barrierMat);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.7, 0.85), villainDarkSteel);
   base.position.y = 0.35;
   group.add(base);
 
-  // Spikes Row
-  const spikeGeo = new THREE.ConeGeometry(0.18, 0.6, 4);
-  for (let i = -0.6; i <= 0.6; i += 0.4) {
-    const spike = new THREE.Mesh(spikeGeo, spikeMat);
-    spike.position.set(i, 0.9, 0);
+  const spikeGeo = new THREE.ConeGeometry(0.18, 0.65, 4);
+  for (let i = -0.65; i <= 0.65; i += 0.43) {
+    const spike = new THREE.Mesh(spikeGeo, villainCrimson);
+    spike.position.set(i, 0.95, 0);
     group.add(spike);
   }
+
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.12, 0.1), villainEyes);
+  strip.position.set(0, 0.35, 0.43);
+  group.add(strip);
 
   return group;
 }
 
 // -------------------------------------------------------------
-// 3. Collectible Gold Energy Crystals
+// 4. Collectible Gold Energy Crystals
 // -------------------------------------------------------------
 export function spawnCollectible(scene, spawnZ = -60) {
   if (!scene) return null;
@@ -111,15 +235,13 @@ export function spawnCollectible(scene, spawnZ = -60) {
   const laneIndex = Math.floor(Math.random() * 3);
   const posX = LANE_POSITIONS[laneIndex];
 
-  const geo = new THREE.OctahedronGeometry(0.38, 0);
-  const crystal = new THREE.Mesh(geo, goldMat);
+  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), goldMaterial);
   group.add(crystal);
 
-  const ringGeo = new THREE.TorusGeometry(0.5, 0.04, 6, 16);
-  const ring = new THREE.Mesh(ringGeo, goldMat);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 6, 16), goldMaterial);
   group.add(ring);
 
-  group.position.set(posX, 1.1, spawnZ);
+  group.position.set(posX, 1.2, spawnZ);
   scene.add(group);
   collectibles.push(group);
 
@@ -135,11 +257,12 @@ export function spawnObstacle(scene, spawnZ = -60) {
   const laneIndex = Math.floor(Math.random() * 3);
   const posX = LANE_POSITIONS[laneIndex];
 
-  // 75% Full Villain Monster, 25% Spiked Barrier
   const rand = Math.random();
   let obstacle;
-  if (rand < 0.75) {
-    obstacle = createMechaVillain();
+  if (rand < 0.45) {
+    obstacle = createMechaGoblin();
+  } else if (rand < 0.75) {
+    obstacle = createCyberDrone();
   } else {
     obstacle = createSpikeBarrier();
   }
@@ -148,7 +271,7 @@ export function spawnObstacle(scene, spawnZ = -60) {
   scene.add(obstacle);
   obstacles.push(obstacle);
 
-  if (Math.random() < 0.45) {
+  if (Math.random() < 0.5) {
     spawnCollectible(scene, spawnZ - 10);
   }
 
@@ -185,21 +308,24 @@ export function createExplosion(scene, position, color = 0xef4444) {
 // Update Loop
 // -------------------------------------------------------------
 export function updateObstacles(scene, speed, delta, time = 0) {
-  // 1. Update Villains
   for (let i = obstacles.length - 1; i >= 0; i--) {
     const obs = obstacles[i];
     obs.position.z += speed * delta;
 
-    // Villain stomping / hover animation
-    if (obs.userData.type === 'VILLAIN') {
-      const stomp = Math.sin(time * 10 + obs.position.z) * 0.1;
-      const { charMesh, frame, shadowRing } = obs.userData;
-      if (charMesh) charMesh.position.y = 1.15 + stomp;
-      if (frame) frame.position.y = 1.15 + stomp;
-      if (shadowRing) {
-        const ringScale = 1.0 + Math.sin(time * 10 + obs.position.z) * 0.2;
-        shadowRing.scale.set(ringScale, ringScale, 1);
-      }
+    // 3D Stomping / Marching Animations
+    if (obs.userData.type === 'GOBLIN') {
+      const stomp = Math.sin(time * 12 + obs.position.z) * 0.45;
+      const { armGroupL, armGroupR, legGroupL, legGroupR, body } = obs.userData;
+
+      if (armGroupL) armGroupL.rotation.x = stomp;
+      if (armGroupR) armGroupR.rotation.x = -stomp;
+      if (legGroupL) legGroupL.rotation.x = -stomp * 0.7;
+      if (legGroupR) legGroupR.rotation.x = stomp * 0.7;
+      if (body) body.position.y = 1.2 + Math.abs(Math.sin(time * 12)) * 0.1;
+
+    } else if (obs.userData.type === 'DRONE') {
+      obs.position.y = Math.sin(time * 5 + obs.position.z) * 0.3;
+      if (obs.userData.wings) obs.userData.wings.rotation.y += 7 * delta;
     }
 
     if (obs.position.z > 8) {
@@ -208,7 +334,6 @@ export function updateObstacles(scene, speed, delta, time = 0) {
     }
   }
 
-  // 2. Update Collectibles
   for (let i = collectibles.length - 1; i >= 0; i--) {
     const col = collectibles[i];
     col.position.z += speed * delta;
@@ -221,7 +346,6 @@ export function updateObstacles(scene, speed, delta, time = 0) {
     }
   }
 
-  // 3. Update Particles
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.userData.life -= delta;
@@ -279,4 +403,3 @@ export function getObstacles() {
 export function getCollectibles() {
   return collectibles;
 }
-
