@@ -1,3 +1,6 @@
+> [!NOTE]
+> **Repository Relocated**: This project has been moved into the multi-game repository **[RJ-Games](https://github.com/rajmohan10j/RJ-Games)** under **[`RJ-Games/cyber-hero-3d-runner`](https://github.com/rajmohan10j/RJ-Games/tree/main/cyber-hero-3d-runner)**. All future updates are maintained there.
+
 # ⚡ Neon Breakers: Cyber Hero vs Villains 3D
 
 A 3D endless action runner and shooter game built with **Three.js** and **Vite**. Control a Cyber Hero running down a futuristic neon cyber-highway, dodging, jumping over obstacles, and blasting Mecha-Goblin villain monsters with dual plasma lasers!
